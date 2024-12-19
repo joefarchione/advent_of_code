@@ -47,5 +47,14 @@ module CalibEq = struct
 end
 
 
-let solve_p1 = CalibEq.solve_equations [Operators.Add; Operators.Mul;]
-let solve_p2 = CalibEq.solve_equations [Operators.Add; Operators.Mul; Operators.Concat;]
+let solve_p1 filepath = 
+  In_channel.read_lines filepath
+  |> List.map ~f:CalibEq.from_string 
+  |> CalibEq.solve_equations [Operators.Add; Operators.Mul;]
+  |> Printf.printf "%d" 
+
+let solve_p2 filepath = 
+  In_channel.read_lines filepath
+  |> List.map ~f:CalibEq.from_string 
+  |> CalibEq.solve_equations [Operators.Add; Operators.Mul; Operators.Concat;]
+  |> Printf.printf "%d" 

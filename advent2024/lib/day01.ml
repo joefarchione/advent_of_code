@@ -3,7 +3,7 @@ open Re
 
 module FrequencyMap = Map.Make(Int)
 
-let parse_input_file filepath = 
+let read filepath = 
   In_channel.read_lines filepath
     |> List.map ~f:(fun s -> Str.split  (Str.regexp "[ \n\r\x0c\t]+") s)
     |> List.map ~f:(fun s_s -> 
@@ -42,4 +42,19 @@ let calculate_simularity left right =
       | Some (v) -> acc + (l*v)
       | None -> acc
   )
+
+let solve_p1 filepath = 
+  filepath 
+  |> read
+  |> sorted_unzip 
+  |> calculate_distance
+  |> (Printf.printf "%d") 
+
+
+let solve_p2 filepath = 
+  filepath 
+  |> read 
+  |> List.unzip 
+  |> (fun (left, right) -> calculate_simularity left right )
+  |> (Printf.printf "%d")
 

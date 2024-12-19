@@ -88,12 +88,15 @@ let parse_lines lines =
   in
   aux lines false [] []
 
-let solve_p1 rules page_lists = 
-  page_lists
-  |> List.filter ~f:(PageList.check_ordering rules) 
-  |> List.map ~f:PageList.get_middle
-  |> List.fold_left ~f:(fun acc a -> acc + a) ~init:0
-  |> Printf.printf "%d";
+let solve_p1 filepath = 
+  In_channel.read_lines filepath
+  |> parse_lines
+  |> fun (rules, page_lists) -> (
+    List.filter page_lists ~f:(PageList.check_ordering rules) 
+    |> List.map ~f:PageList.get_middle
+    |> List.fold_left ~f:(fun acc a -> acc + a) ~init:0
+    |> Printf.printf "%d";
+  )
 
 
 

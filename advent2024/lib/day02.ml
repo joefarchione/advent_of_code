@@ -31,21 +31,18 @@ let read_reports filepath =
   |> List.map ~f:(fun line -> Re.matches re_digits line |> List.map ~f:Int.of_string)
 
 
-let solve_p1 (reports: int list list) = 
-  reports
+let solve_p1 filepath = 
+  filepath
+  |> read_reports
   |> List.filter ~f:(is_safe 0)
   |> List.fold_left ~f:(fun total _ -> total + 1) ~init:0 
   |> (Printf.printf "%i")
 
-let solve_p2 reports = 
-  reports
+let solve_p2 filepath = 
+  filepath
+  |> read_reports
   |> List.filter ~f:(is_safe 1)
   |> List.fold_left ~f:(fun total _ -> total + 1) ~init:0 
   |> (Printf.printf "%i")
 
-
-let solve_from_filepath filepath solve = 
-  filepath 
-  |> read_reports 
-  |> solve
 

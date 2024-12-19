@@ -123,3 +123,17 @@ end
 let read_input filepath = 
   In_channel.read_lines filepath
   |> List.map ~f:explode
+
+let solve_p1 filepath = 
+  let open WordSearch in 
+  read_input filepath 
+  |> create  
+  |> search_for_xmas
+  |> (Printf.printf "%d")
+
+let solve_p2 filepath = 
+  let open WordSearch in 
+  read_input filepath 
+  |> create  
+  |> search_for_x_mas
+  |> (Printf.printf "%d")

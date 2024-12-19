@@ -136,7 +136,8 @@ module Map = struct
 
 end
 
-let solve_p1 (t: CharMatrix.t) = 
+let solve_p1 filepath = 
+  let t  = Utils.read_input filepath |> CharMatrix.from_list in
   let open Map in
   let rec aux t guard distinct_positions = 
     match move_position t guard with 
@@ -145,11 +146,15 @@ let solve_p1 (t: CharMatrix.t) =
     )
     | None -> distinct_positions
   in
-  match find_initial_guard t with 
-  | Some (g) -> (
-    aux t g (Set.add PositionSet.empty g.position) |> Set.length
-  )
-  | None -> 0
+  let value = (
+    match find_initial_guard t with 
+    | Some (g) -> (
+      aux t g (Set.add PositionSet.empty g.position) |> Set.length
+    )
+    | None -> 0
+  ) in 
+
+  Printf.printf "%d" value;;
 
 let has_a_loop (t: CharMatrix.t) guard = 
   let open Map in
@@ -177,9 +182,10 @@ let get_all_guard_positions (t: CharMatrix.t) (initial_guard: Guard.t) =
   in
   (aux t initial_guard PositionSet.empty) |> Set.to_list
 
-let solve_p2 t = 
+let solve_p2 filepath = 
+  let t  = Utils.read_input filepath |> CharMatrix.from_list in 
   let open Map in 
-  match find_initial_guard t with 
+  let value = (match find_initial_guard t with 
   | Some (g) -> (
     get_all_guard_positions t g
     |> List.map ~f:(fun pos_to_change -> 
@@ -192,4 +198,5 @@ let solve_p2 t =
     )
     |> List.fold_left ~f:(fun acc a -> acc + a) ~init:0
   )
-  | None -> 0
+  | None -> 0) in
+  Printf.printf "%d" value;;
