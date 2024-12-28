@@ -46,6 +46,30 @@ let split_list list predicate =
   in
   aux [] [] list
 
+let cartesian_product list1 list2 =
+  List.concat (List.map ~f:(fun x -> List.map ~f:(fun y -> (x, y)) list2) list1)
+
+let rec choose k list =
+  match k, list with
+  | 0, _ -> [[]]
+  | _, [] -> []
+  | n, x::xs ->
+    List.concat 
+      [ List.map ~f:(fun subset -> x :: subset) (choose (n - 1) list); 
+        choose n xs ]
+let subsets_of_size_2 list =
+  let rec aux acc = function
+    | [] | [_] -> acc
+    | x :: xs -> aux ((List.map ~f:(fun y -> (x, y)) xs) @ acc) xs
+  in
+  aux [] list
+
+let modulo x y =
+  let result = x mod y in
+  if result >= 0 then result
+  else result + y
+
+
 module Coords = struct
   type t = {x: int; y: int;} [@@deriving sexp, equal, compare]
   let up_n n t  = {t with x = t.x+n}
@@ -64,11 +88,22 @@ module Coords = struct
     && (t.y < dim.y)
     && (t.y >= 0)
 
-  let distance a b = Int.(abs (a.x - b.x) + abs (a.y - b.y))
-
+  let distance a b = {x=Int.abs (a.x - b.x); y= Int.abs (a.y - b.y)}
   let next dim t = 
     [up t; down t; right t; left t;]
     |> List.filter ~f:(fun p -> valid dim p)
+  let dimension_from_file filepath = 
+    let lines = In_channel.read_lines filepath in 
+    let x = List.length lines  in
+    let y = String.length (List.hd_exn lines) in 
+    {x;y;}
+
+  type slope_angle = Positive | Negative | Horizontal | Vertical
+
+  let slope a b : float  = float_of_int (b.y - a.y) /. float_of_int (b.x - a.x)
+  let diff a b = {x = (a.x - b.x) ; y = (a.y - b.y)}
+  let add a b = {x = (a.x + b.x) ; y = (a.y + b.y)}
+  let show t = Printf.sprintf "(%d, %d)" t.x t.y
 
 end
 
