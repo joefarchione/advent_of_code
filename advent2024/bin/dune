@@ -2,4 +2,5 @@
  (public_name advent2024)
  (name main)
  (libraries advent2024_lib core)
- (preprocess (pps ppx_jane)))
+ (preprocess
+  (pps ppx_jane)))
