@@ -30,7 +30,6 @@ let rec elem_wise_mult list1 list2 =
   | x::xs, y::ys -> (x * y) :: (elem_wise_mult xs ys)
   | _, _ -> failwith "Lists must have the same length"
 
-
 let split_digits n =
   let rec split_digits' n = 
     if n = 0 then []
@@ -38,13 +37,6 @@ let split_digits n =
   in
   if n < 10 then [n]
   else split_digits' n |> List.rev
-
-let split_list list predicate =
-  let rec aux acc1 acc2 = function
-    | [] -> List.rev acc1, List.rev acc2
-    | x::xs -> if predicate x then aux (x::acc1) acc2 xs else aux acc1 (x::acc2) xs
-  in
-  aux [] [] list
 
 let cartesian_product list1 list2 =
   List.concat (List.map ~f:(fun x -> List.map ~f:(fun y -> (x, y)) list2) list1)
@@ -68,6 +60,23 @@ let modulo x y =
   let result = x mod y in
   if result >= 0 then result
   else result + y
+
+let rec transpose list = match list with
+| []             -> []
+| []   :: xss    -> transpose xss
+| (x::xs) :: xss ->
+    (x :: List.map ~f:List.hd_exn xss) :: transpose (xs :: List.map ~f:List.tl_exn xss)
+
+let split_list on lst = 
+  let rec aux lst on out sub = 
+    match lst with 
+    | hd :: tl when Poly.equal hd on -> aux tl on (List.rev(sub)::out)  []
+    | hd :: tl -> aux tl on out (hd::sub)
+    | [] -> List.rev sub :: out
+  in 
+  List.rev (aux lst on [] [])
+
+let split_on_newline lst = split_list "" lst
 
 
 module Coords = struct
@@ -125,3 +134,4 @@ let memo_rec f =
     )
   in
     g
+
