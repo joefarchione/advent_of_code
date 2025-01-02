@@ -78,6 +78,11 @@ let split_list on lst =
 
 let split_on_newline lst = split_list "" lst
 
+let filter_some (lst: ('a option) list) : 'a list = 
+  lst 
+  |> List.filter ~f:(function | Some _ -> true | None -> false)
+  |> List.map ~f:(function | Some (v) -> v | None -> failwith "")
+
 
 module Coords = struct
   type t = {x: int; y: int;} [@@deriving sexp, equal, compare]
