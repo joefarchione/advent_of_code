@@ -45,22 +45,23 @@ module DesignCache = Hashtbl.Make(String)
 let number_of_ways designs towels = 
   let memo = DesignCache.create () in 
   let rec aux rem_towels design = 
-    match Hashtbl.find memo design with
+    match Hashtbl.find memo design with 
     | Some (v) -> v
-    | None -> (
-      match rem_towels with 
-      | [] -> 0
-      | hd :: tl when is_prefix hd design -> (
-        match (remove_prefix hd design) with 
-        | "" -> 1
-        | s  -> (
+    | None -> 
+      if String.is_empty design then 
+        1
+      else 
+        match rem_towels with 
+        | towel::tl when is_prefix towel design -> (
+          let s = remove_prefix towel design in 
           let num_ways = (aux towels s)  in 
+          let num_ways_rest = (aux tl design) in 
           Hashtbl.update memo s ~f:(fun _ -> num_ways);
-          num_ways + (aux tl design)
+          num_ways + + num_ways_rest
         )
-      )
-      | _ :: tl -> aux tl design 
-    )
+        | _::tl -> aux tl design
+        | [] -> 0
+
   in 
   List.fold designs ~init:0 ~f:(fun acc design -> (aux towels design) + acc)
 

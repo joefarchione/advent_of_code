@@ -20,12 +20,7 @@ module Position = struct
 
   let neighbors dim t = 
     [left t; right t; down t; up t;]
-    |> List.filter ~f:(valid dim)
-
-  let get_all_positions dimx dimy = 
-    let open Utils in 
-    List.map (0--(dimx-1)) ~f:(fun x -> List.map (0--(dimy-1)) ~f:(fun y -> {x;y;}))
-    |> List.concat
+    |> List.filter ~f:(valid dim) 
 
 end
 
@@ -41,89 +36,17 @@ module Grid = struct
     Position.neighbors t.dim p 
     |> List.filter ~f:(fun p -> not (Set.mem t.walls p))
 
+  let get_all_positions (t:t) = 
+    let open Utils in 
+    List.map (0--(t.dim.x-1)) ~f:(fun x -> List.map (0--(t.dim.y-1)) ~f:(fun y -> Position.{x;y;}))
+    |> List.concat
+    |> List.filter ~f:(fun p -> not (Set.mem t.walls p))
+
 end
 
-
-module PositionDistance = struct 
-  module M = Map.Make(Position)
-  include M
-
-  type t = int M.t
-
-  let update t position distance = 
-    Map.update t position ~f:(function
-      | Some (v) -> if distance < v then distance else v
-      | None -> distance
-    ) 
-end 
-
-module PositionPairingHeap = struct
-
-  module Elt = struct
-    type t = int * Position.t
-
-    let compare (a, x) (b, y) = 
-      match Int.compare a b with 0 -> Position.compare x y | x -> x
-
-    let sexp_of_t (a, x) =
-      Sexp.List [ Int.sexp_of_t a; Position.sexp_of_t x ]
-  end
-
-  module EltComp = struct
-      include Comparator.Make (Elt)
-      type t = Elt.t
-  end
-
-  type t = Set.M(EltComp).t
-
-  let empty : t = Set.empty (module EltComp)
-  let is_empty = Set.is_empty
-  let add q ~prio elt = Set.add q (prio, elt)
-  let min_elt_exn q = snd (Set.min_elt_exn q)
-
-  let min_elt (q:t) = 
-    match Set.min_elt q with 
-    | Some (v) -> Some (snd v)
-    | None -> None
-
-  let remove (q:t) p = Set.remove q p
-
-  let remove_min_elt_exn q =
-    let ((_, elt) as min) = Set.min_elt_exn q in
-    (Set.remove q min, elt)
-
-  let remove_min_elt (q:t) =
-    match Set.min_elt q with 
-    | Some (priority, position) -> Some (remove q (priority, position), (priority, position))
-    | None -> None
-
-  let sexp_of_t q =
-    let elts = Set.to_list q in
-    Sexp.List (List.map elts ~f:Elt.sexp_of_t)
-
-  let get q position = Set.find q ~f:(fun (_, p) -> Position.equal p position)
-  let neighbors (q:t) grid position = 
-    Grid.neighbors grid position
-    |> List.map ~f:(fun p -> get q p)
-    |> List.fold ~init:[] ~f:(fun acc p ->
-      match p with
-      | Some (v) -> v::acc
-      | None -> acc
-    )
-
-
-  let from_grid (grid: Grid.t) =
-    Position.get_all_positions grid.dim.x grid.dim.y
-    |> List.fold ~init:empty ~f:(fun acc p -> 
-      if Position.equal p Position.{x=0;y=0;} then 
-        add acc ~prio:0 p
-      else
-        add acc ~prio:Int.max_value p)
-end
-
-let read dimx dimy filepath = 
+let read n dimx dimy filepath = 
   let walls = 
-    In_channel.read_lines filepath
+    List.take (In_channel.read_lines filepath) n 
     |> List.map ~f:(fun line -> 
       match Re.matches ((Re.rep1 Re.digit) |> Re.compile) line with
       | [x;y;] -> Position.{x=int_of_string x;y = int_of_string y;}
@@ -133,28 +56,63 @@ let read dimx dimy filepath =
     in
   Grid.{dim=Position.{x=dimx;y=dimy;}; walls = walls}
 
-let djikstra (grid: Grid.t) = 
-  let target = Position.{x=grid.dim.x-1; y = grid.dim.y-1} in 
+module Elt = struct
+   type t = int * Position.t [@@deriving sexp, equal, compare]
+   let compare (a,c) (b,d) = 
+    if Int.compare a b  = 0 then Position.compare c d else Int.compare a b
+end
 
-  let rec aux (unvisited: PositionPairingHeap.t) =  
-    match PositionPairingHeap.remove_min_elt unvisited with 
-    | Some ((unvisited, (priority, position))) -> (
-      if Position.equal position target then priority
-      else (
-        let neighbors = PositionPairingHeap.neighbors unvisited grid position in 
-        let unvisited = List.fold ~init:unvisited neighbors ~f:(fun acc (curr_priority, p) -> 
-          Set.add acc (if (priority + 1) < curr_priority then (priority + 1, p) else (curr_priority, p))
-        ) in 
-        aux unvisited
-      )
+module PairSet = struct 
+  include Set.Make(Elt)
+  let from_positions positions = 
+    List.fold positions ~init:empty ~f:(fun acc p -> 
+      match p with 
+      | Position.{x=0;y=0} -> Set.add acc (0, p)
+      | _ -> Set.add acc (Int.max_value, p)
     )
-    | None -> failwith "target unreachable"
-  in
-  let unvisited = PositionPairingHeap.from_grid grid in 
-  aux unvisited
+end
 
+let dijkstra (grid: Grid.t) = 
+  let all_positions = Grid.get_all_positions grid in 
+  let unvisited = PositionSet.of_list all_positions in 
+  let q = PairSet.from_positions all_positions in 
+  let target = Position.{x=grid.dim.x-1;y=grid.dim.y-1;} in
+
+  let rec aux q unvisited start (distance:int) =
+    if Position.equal start target then distance
+    else if Set.is_empty q then distance
+    else (
+(*       Set.iter unvisited ~f:(fun p -> Printf.printf "%s" (Position.show p)); *)
+      let neighbors = Grid.neighbors grid start |> List.filter ~f:(Set.mem unvisited) in 
+      let q = List.fold neighbors ~init:q ~f:(fun acc n -> Set.add acc (distance + 1, n)) in 
+      let q = Set.remove q (distance, start) in 
+      let (distance, position) = Set.min_elt_exn q in 
+      let unvisited = Set.remove unvisited start in 
+      let q = Set.remove q (distance, position) in 
+      aux q unvisited position distance 
+    )
+  
+  in 
+  aux q unvisited Position.{x=0;y=0;} 0
+
+let solve_p2 n dimx dimy filepath = 
+  let length = List.length (In_channel.read_lines filepath) in 
+  let rec aux n = 
+    let grid = read n dimx dimy filepath in 
+    let soln = dijkstra grid in 
+    Out_channel.flush Out_channel.stdout;
+    if n > length then 
+      print_endline "no blocking"
+    else if (Int.abs soln) > 1000000000 then
+      List.nth_exn (In_channel.read_lines filepath) (n-1)
+      |> print_endline
+    else
+      aux (n+1)
+  in 
+  aux n
 
 let solve_p1 grid = 
-  djikstra grid
+  dijkstra grid
   |> Printf.printf "%d"
+
 

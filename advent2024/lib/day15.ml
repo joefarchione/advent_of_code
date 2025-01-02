@@ -100,6 +100,7 @@ module Grid = struct
     | {value = Object.Wall; _} -> (grid, robot)
     | _ -> failwith (Printf.sprintf "%d %d %s" next_space.position.x next_space.position.y (Sexp.to_string (Object.sexp_of_t next_space.value)))
 
+
 end
 
 type inputs = {grid: Grid.t; directions: Position.direction list; robot: Grid.space}

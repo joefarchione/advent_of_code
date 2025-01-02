@@ -1,193 +1,134 @@
 open Core
 
-module FreeCode = struct
-  type t = int
-  let next t = if t > 1 then Some (t-1) else None
 
+type fileblock  = {id:int; length:int} [@@deriving sexp, equal, compare]
+type free  = {length: int;} [@@deriving sexp, equal, compare]
+type disktype = FileBlock of fileblock | Free of free [@@deriving sexp, equal, compare]
+type disk = disktype list [@@deriving sexp, equal, compare]
 
-  let to_string t = 
-    let open Utils in 
-    List.fold (1--t) ~init:"" ~f:(fun acc _ -> acc ^ ("."))
-end
+let take_from_fileblock (block: fileblock) = 
+  if block.length = 0 then failwith "empty fileblock"
+  else if block.length = 1 then None
+  else Some {block with length = Int.pred block.length}
 
-module BlockCode = struct 
-  type t = {length: int; value: int} [@@deriving sexp, compare, equal]
-  let next t = 
-    if t.length > 1 then 
-      Some {t with length = t.length - 1}
-    else 
-        None
-
-  let to_string t = 
-    let open Utils in 
-    List.fold (1--t.length) ~init:"" ~f:(fun acc _ -> acc ^ (Printf.sprintf "%d" t.value))
-end
-
-module BlockSet = Set.Make(BlockCode)
-
-module DiskMap = struct
-  type encoding = Block of BlockCode.t | Free of FreeCode.t
-  type t  = encoding list
-
-  let print t = 
-    let open Utils in
-    List.iter t ~f:(function
-    | Free (f) -> List.iter (1--f) ~f:(fun _ -> Printf.printf ".")
-    | Block (b) -> List.iter (1--b.length) ~f:(fun _ -> Printf.printf "%d" b.value)
-    )
-
-  let length t = 
-    List.fold t ~init:0 ~f:(fun acc a ->
-      match a with
-      | Free (f) -> f + acc
-      | Block (b) -> b.length + acc
-    )
-
-  let take_block (t: encoding list) = 
-    let rec aux t free_count = 
-      match t with 
-      | Free (f) :: tl -> aux tl (free_count+f)
-      | Block (block) :: tl -> (
-        match BlockCode.next block with 
-        | Some (b) ->  (Some block, Block (b) :: tl, free_count)
-        | None -> (Some block, tl, free_count)
-      )
-      | [] -> (None, [], free_count)
-    in
-    aux t 0
-
-  let remove_first_matching predicate list =
-    let rec aux acc = function
-      | [] -> None, List.rev acc
-      | x :: xs -> if predicate x then Some x, List.rev acc @ xs else aux (x :: acc) xs
-    in
-    aux [] list
-
-  let take_block_of_size n t = 
-    let (block, t) = 
-      remove_first_matching 
-        (function | Free (_) -> false | Block(b) -> b.length = n) 
-        t
-    in
-    match block with 
-    | Some (Free (_)) -> failwith "only need blocks!"
-    | Some (Block (b)) -> (Some b, t)
-    | None -> (None, t)
-
-  let find_free_space_of_at_most_size n t = 
-    let (block, t) = 
-      remove_first_matching 
-        (function | Free (f) -> f <= n | Block(_) -> false) 
-        t
-    in
-    match block with 
-    | Some (Block (_)) -> failwith "only need freespace!"
-    | Some (Free (f)) -> (Some f, t)
-    | None -> (None, t)
+let take_from_free_n n (free: free) = 
+  if free.length = 0 then failwith "empty space"
+  else if free.length = n then None
+  else Some {length = free.length - n}
 
   
+let take_from_free (free: free) = take_from_free_n 1 free
 
-  let rec read_disk_map ?(index=0) digits = 
-    match digits with 
-    | block_size::0::tl -> (
-        (Block BlockCode.{length=block_size; value=index}) :: read_disk_map ~index:(index + 1) tl
+let can_fit_fileblock (free:free) (fileblock:fileblock) = fileblock.length <= free.length
+
+module DiskDeque = struct 
+
+  module M = Deque
+
+  type t = disktype Deque.t
+
+  let create () = Deque.create ()
+
+  let deque_front_or_back_item deque enque (t:t) = 
+    match deque t with 
+    | Some (item) -> (
+      match item with 
+      | Free (free) ->  (
+          match take_from_free free with 
+          | Some (remaining) -> enque t (Free remaining)
+          | None -> ());
+          Some (Free free)
+      | FileBlock (file) -> (
+          match take_from_fileblock file with 
+          | Some (remaining) -> enque t (FileBlock remaining)
+          | None -> ());
+          Some (FileBlock file)
     )
-    | block_size::space_size::tl -> (
-        (Block BlockCode.{length=block_size; value=index}) :: Free (space_size) :: read_disk_map ~index:(index + 1) tl
+    | None -> None
+
+  let deque_front_item = deque_front_or_back_item Deque.dequeue_front Deque.enqueue_front 
+  let deque_back_item = deque_front_or_back_item Deque.dequeue_back Deque.enqueue_back 
+
+  let rec deque_back_fileblock (t:t) = 
+    match Deque.dequeue_back t with 
+    | None -> None
+    | Some (disktype) -> (
+      match disktype with 
+      | Free _ -> deque_back_fileblock t
+      | FileBlock (block) -> Some block
     )
-    | [block_size] -> (Block {length=block_size; value=index}) :: read_disk_map ~index:(index + 1) []
-    | [] -> []
 
-  let calculate_check_sum_moving_blocks diskmap = 
-    let rec aux map rev_map position checksum length nfree =
-      match map with 
-      | Free (f) :: tl when (length > ((position) + (nfree)))  -> (
-        let (block, rev_map, free_from_rev) = take_block rev_map in 
-        match block with 
-        | Some (b) -> (
-          let map = (
-            match FreeCode.next f with 
-            | Some (v) -> Free (v) :: tl
-            | None -> tl
-          ) in
-          if (length > ((position) + (nfree + free_from_rev))) then
-            aux map rev_map (position+1) ((position * b.value) + checksum) length (nfree+1+free_from_rev)
-          else 
-            checksum
-        )
-        | None -> checksum
-      )
-      | Block (b) :: tl when (length > ((position) + nfree)) ->  (
-        let map = match BlockCode.next b with
-        | Some (v) -> Block (v) :: tl
-        | None -> tl in 
-        aux map rev_map (position+1) ((position * b.value) + checksum) length nfree
-      )
-      | _ -> checksum
-    in 
-    aux diskmap (List.rev diskmap) 0 0 (length diskmap) 0
-
-
-  let calculate_check_sum_on_sort sorted = 
-    let rec aux' position sorted acc = 
-      match sorted with 
-      | Free (f) :: tl -> aux' (position + f) tl acc
-      | Block (b) :: tl -> 
-        let open Utils in 
-        let delta = List.map (0--(b.length-1)) ~f:(fun i -> (position + i) * b.value) |> List.fold ~init:0 ~f:(+) in 
-        aux' (position + b.length) tl (acc + delta)
-      | _ -> acc
-    in
-    aux' 0 sorted 0
-
-  let calculate_checksum_on_files diskmap = 
-    let rec replace' map (block: BlockCode.t) (sorted: encoding list) = 
-      match map with 
-      | Free (f) :: _ when f >= block.length ->  (
-        if f - block.length > 0  then 
-          Free (f-block.length) :: Block (block) :: sorted 
-        else
-          Block (block) :: sorted 
-      )
-      | hd::tl -> replace' tl block (hd::sorted)
-      | [] -> sorted
-    in 
-
-    let rev_diskmap = List.rev diskmap 
-    |> List.filter ~f:(function | Block (_) -> true | Free _ -> false) 
-    |> List.map ~f:(function | Block (b) -> b | Free _ -> failwith "no blocks!") in 
-
-    let sorted = List.fold rev_diskmap ~init:[] ~f:(fun acc block -> replace' diskmap block acc)
-    |> List.rev in 
-
-    List.iter sorted ~f:(fun code -> 
-      (match code with 
-      | Free (f) -> Printf.printf "%s" (FreeCode.to_string f)
-      | Block (b) -> Printf.printf "%s" (BlockCode.to_string b));
-    );
-    print_endline "";
-
-    calculate_check_sum_on_sort sorted
+  let rec enque_front_space_n n (t:t) = 
+    match Deque.dequeue_back t with 
+    | None -> None
+    | Some (disktype) -> (
+      match disktype with 
+      | Free _ -> deque_back_fileblock t
+      | FileBlock (_) -> enque_front_space_n n t
+    )
 
 end
 
 let read filepath = 
-  filepath 
-  |> In_channel.read_lines 
-  |> List.hd
-  |> function 
-    | Some (l) -> (
-      String.to_list l
-      |> List.map ~f:Char.get_digit_exn
-      |> DiskMap.read_disk_map  
+  let re_digit = (Re.digit |> Re.compile) in 
+  let deque = DiskDeque.create () in 
+  In_channel.read_lines filepath
+  |> List.hd_exn
+  |> Re.matches re_digit
+  |> List.map ~f:(int_of_string)
+  |> List.iteri ~f:(fun i d -> 
+    if (i mod 2) = 0 then 
+      Deque.enqueue_back deque (FileBlock {id = i/2; length = d})
+    else if d = 0 then ()
+    else Deque.enqueue_back deque (Free {length = d})
+  );
+  deque
+
+let read_p2 filepath = 
+  let re_digit = (Re.digit |> Re.compile) in 
+
+  let disk = 
+    In_channel.read_lines filepath
+    |> List.hd_exn
+    |> Re.matches re_digit
+    |> List.map ~f:(int_of_string)
+    |> List.foldi ~init:[] ~f:(fun i acc d -> 
+      if (i mod 2) = 0 then 
+        (FileBlock {id = i/2; length = d})::acc
+      else if d = 0 then acc
+      else (Free {length = d})::acc
     )
-    | None -> failwith "empty file"
+    in
+  (
+    List.rev disk, 
+    disk 
+    |> List.filter ~f:(function | Free _ -> false | FileBlock _ -> true)
+    |> List.map ~f:(function | Free (_) -> failwith "no frees" | FileBlock (f) -> f)
+  )
 
-let solve_p1 diskmap = 
-  DiskMap.calculate_check_sum_moving_blocks diskmap
-  |> (Printf.printf "%d")
+let update_checksum checksum n id = checksum + (n * id)
 
+let calculate_checksum disk = 
+  let rec aux n disk checksum = 
+    match DiskDeque.deque_front_item disk with 
+    | Some (FileBlock (file)) -> (
+        aux (n+1) disk (update_checksum checksum n file.id)
+    )
+    | Some (Free (_)) -> (
+      let file = DiskDeque.deque_back_fileblock disk in 
+      match file with 
+      Some (file) -> (
+        aux (n+1) disk (update_checksum checksum n file.id) 
+      )
+      | None -> checksum
+    )
+    | None -> checksum
+  in
+  let output = aux 0 disk 0 in 
+  print_endline "";
+  output
 
-let solve_p2 diskmap = 
-  DiskMap.calculate_checksum_on_files diskmap
+let solve_p1 disk = 
+  calculate_checksum disk
   |> Printf.printf "%d"
+
