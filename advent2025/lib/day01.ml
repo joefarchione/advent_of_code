@@ -18,16 +18,17 @@ let read filepath =
 
 let num_of_zero_passes direction degrees position =
   let num_cycles = degrees / 100 in 
-  let change = degrees % 100 in 
-  let next_position =  
-    match direction with 
-    | Left -> position - change
-    | Right -> position + change
-  in
   if position = 0 then num_cycles
-  else if next_position <= 0 then num_cycles + 1
-  else if next_position >= 100 then num_cycles + 1
-  else num_cycles
+  else
+    let change = degrees % 100 in 
+    let next_position =  
+      match direction with 
+      | Left -> position - change
+      | Right -> position + change
+    in
+    if next_position <= 0 then num_cycles + 1
+    else if next_position >= 100 then num_cycles + 1
+    else num_cycles
 
 
 let solve1 filepath = 
