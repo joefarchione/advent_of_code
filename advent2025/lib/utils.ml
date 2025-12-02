@@ -11,3 +11,11 @@ let chunk_string s n =
       aux (i + n) (chunk :: acc)
   in
   aux 0 []
+
+let unpack2 f (a, b) = f a b
+
+let range_inclusive a b = 
+  Seq.init (b - a + 1) (fun i -> a + i)
+
+let range_exclusive a b = 
+  Seq.init (b - a) (fun i -> a + i)

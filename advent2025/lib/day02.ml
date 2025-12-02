@@ -4,8 +4,7 @@ open Utils
 type product_id = char list
 
 let product_id_range a b = 
-  let a, b = Int.of_string a, Int.of_string b in
-  Seq.init (b-a+1) (fun i -> a + i)
+  range_inclusive (Int.of_string a) (Int.of_string b)
   |> Seq.map Int.to_string
 
 let has_even_number_of_digits id = String.length id mod 2 = 0
@@ -30,14 +29,12 @@ let is_repeated_n n s =
 let is_repeated_twice s = 
   let midpoint = String.length s / 2 in
   Seq.init midpoint (fun i -> (String.get s i, String.get s (midpoint + i)))
-  |> Seq.for_all (fun (a, b) -> Char.equal a b)
+  |> Seq.for_all (unpack2 Char.equal)
 
 let is_repeated s = 
   Seq.init ((String.length s) / 2) (fun i -> i)
   |> Seq.find (fun i -> is_repeated_n (i + 1) s)
-  |> function 
-    | Some _ -> true
-    | None -> false
+  |> Option.is_some
 
 let solve1 filepath =
   read filepath
@@ -49,7 +46,7 @@ let solve1 filepath =
       |> Seq.fold_left (+) 0
   )
   |> List.fold ~init:0 ~f:(+)
-  |> printf "%d\n"
+  |> printf "%d"
       
 let solve2 filepath =
   read filepath
@@ -60,7 +57,7 @@ let solve2 filepath =
       |> Seq.fold_left (+) 0
   )
   |> List.fold ~init:0 ~f:(+)
-  |> printf "%d\n"
+  |> printf "%d"
       
 
 
