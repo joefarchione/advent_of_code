@@ -1,0 +1,8 @@
+(library
+ (name day03)
+ (libraries core advent2025_lib)
+ (inline_tests)
+ (preprocess (pps ppx_inline_test ppx_expect)))
+
+
+

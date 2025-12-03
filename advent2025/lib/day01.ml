@@ -10,10 +10,10 @@ let rotate direction degrees position =
 let read filepath = 
   In_channel.read_lines filepath
   |> List.map ~f:(fun line ->  
-    match String.to_list line with
-    | 'R'::tl -> (Right, Int.of_string (String.of_list tl))
-    | 'L'::tl -> (Left, Int.of_string (String.of_list tl))
-    | _ -> failwith "Invalid input"
+    (
+      (if String.equal (String.prefix line 1) "L" then Left else Right),
+      String.drop_prefix line 1 |> Int.of_string
+    )
   )
 
 let num_of_zero_passes direction degrees position =

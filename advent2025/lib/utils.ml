@@ -19,3 +19,29 @@ let range_inclusive a b =
 
 let range_exclusive a b = 
   Seq.init (b - a) (fun i -> a + i)
+
+let rec remove_last l = 
+  match l with 
+  | [] -> []
+  | [ _ ] -> []
+  | hd :: tl -> hd :: remove_last tl
+
+
+module List = struct
+  include List
+
+  let max_elt_i lst ~compare =
+    let rec aux lst cmax cindex index =
+      match lst with
+      | [] -> (cmax, cindex)
+      | hd :: tl ->
+        if compare hd cmax > 0 then
+          aux tl hd index (index + 1)
+        else
+          aux tl cmax cindex (index + 1)
+      in
+    match lst with
+    | [] -> None
+    | hd :: tl -> Some (aux tl hd 0 1)
+
+end
