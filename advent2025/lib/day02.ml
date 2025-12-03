@@ -46,7 +46,6 @@ let solve1 filepath =
       |> Seq.fold_left (+) 0
   )
   |> List.fold ~init:0 ~f:(+)
-  |> printf "%d"
       
 let solve2 filepath =
   read filepath
@@ -57,7 +56,6 @@ let solve2 filepath =
       |> Seq.fold_left (+) 0
   )
   |> List.fold ~init:0 ~f:(+)
-  |> printf "%d"
       
 
 

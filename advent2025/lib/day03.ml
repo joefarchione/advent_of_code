@@ -50,11 +50,9 @@ let solve1 filepath =
   read filepath
   |> List.map ~f:find_largest_joltage
   |> List.fold ~init:0 ~f:(+)
-  |> printf "%d"
 
 let solve2 filepath = 
   read filepath
   |> List.map ~f:(find_largest_joltage_n 12)
   |> List.fold ~init:0 ~f:(+)
-  |> printf "%d"
     

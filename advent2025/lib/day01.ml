@@ -38,7 +38,6 @@ let solve1 filepath =
       (new_position, count + (if new_position = 0 then 1 else 0))
   )
   |> snd
-  |> Printf.printf "%d"
 
 let solve2 filepath = 
   read filepath
@@ -47,4 +46,3 @@ let solve2 filepath =
       (new_position, count + num_of_zero_passes direction degrees position)
   )
   |> snd
-  |> Printf.printf "%d"
