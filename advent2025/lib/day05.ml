@@ -61,4 +61,4 @@ let solve1 filepath =
 let solve2 filepath =
   read filepath |> fst |> RangeList.sort |> RangeList.merge
   |> RangeList.map ~f:Range.length
-  |> RangeList.sum (module Int) ~f:Fn.id
+  |> RangeList.cumsum (module Int)

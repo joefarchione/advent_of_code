@@ -23,11 +23,8 @@ let solve1 filepath =
 
 let solve2 filepath =
   let rec aux towels count =
-    if towels |> Set.filter ~f:(fewer_than_four_adjacent towels) |> Set.is_empty
-    then count
-    else
-      let remove = towels |> Set.filter ~f:(fewer_than_four_adjacent towels) in
-      let rem_towels = Set.diff towels remove in
-      aux rem_towels (count + Set.length remove)
+    match towels |> Set.filter ~f:(fewer_than_four_adjacent towels) with
+    | remove when Set.is_empty remove -> count
+    | remove -> aux (Set.diff towels remove) (count + Set.length remove)
   in
   aux (read filepath) 0
