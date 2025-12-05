@@ -1,31 +1,15 @@
 open! Core
 
-module IntPair = struct
-  type t = int * int [@@deriving compare, sexp, hash]
-end
-
-module IntPairSet = Set.Make (IntPair)
-
-let adjacent_coords (x, y) =
-  [
-    (x - 1, y + 1);
-    (x - 1, y);
-    (x - 1, y - 1);
-    (x + 1, y + 1);
-    (x + 1, y);
-    (x + 1, y - 1);
-    (x, y + 1);
-    (x, y - 1);
-  ]
-
 let read filepath =
   In_channel.read_lines filepath
   |> List.mapi ~f:(fun i line ->
          line |> String.to_list
          |> List.mapi ~f:(fun j v -> ((i, j), v))
          |> List.filter ~f:(fun (_, v) -> Char.equal v '@')
-         |> List.map ~f:(fun (coord, _) -> coord))
-  |> List.concat |> IntPairSet.of_list
+         |> List.map ~f:fst)
+  |> List.concat |> Types.IntPairSet.of_list
+
+let adjacent_coords (x, y) = Types.IntPair.neighbors (x, y)
 
 let fewer_than_four_adjacent grid coord =
   adjacent_coords coord
