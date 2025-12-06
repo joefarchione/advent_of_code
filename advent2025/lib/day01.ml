@@ -1,4 +1,4 @@
-open! Core
+open Aoc
 
 type direction = Left | Right
 

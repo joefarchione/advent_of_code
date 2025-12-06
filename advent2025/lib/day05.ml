@@ -1,5 +1,4 @@
-open! Core
-open Functions
+open Aoc
 
 module Range = struct
   type t = int * int [@@deriving compare, sexp, hash]

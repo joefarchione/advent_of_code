@@ -1,5 +1,4 @@
-open! Core
-open Utils
+open Aoc
 
 let read filepath =
   In_channel.read_lines filepath

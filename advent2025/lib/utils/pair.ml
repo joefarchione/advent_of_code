@@ -1,7 +1,11 @@
 open! Core
 
-module IntPair = struct
-  type t = int * int [@@deriving compare, sexp, hash]
+module Coord2d = struct
+  include Tuple2
+
+  type t = (int, int) Tuple2.t [@@deriving sexp, compare]
+
+  include Tuple.Comparable (Int) (Int)
 
   let up t = (fst t - 1, snd t)
   let down t = (fst t + 1, snd t)
@@ -25,4 +29,4 @@ module IntPair = struct
     ]
 end
 
-module IntPairSet = Set.Make (IntPair)
+module Coord2Set = Set.Make (Coord2d)

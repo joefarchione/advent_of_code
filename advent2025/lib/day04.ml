@@ -1,4 +1,4 @@
-open! Core
+open Aoc
 
 let read filepath =
   In_channel.read_lines filepath
@@ -7,9 +7,9 @@ let read filepath =
          |> List.mapi ~f:(fun j v -> ((i, j), v))
          |> List.filter ~f:(fun (_, v) -> Char.equal v '@')
          |> List.map ~f:fst)
-  |> List.concat |> Types.IntPairSet.of_list
+  |> List.concat |> Pair.Coord2Set.of_list
 
-let adjacent_coords (x, y) = Types.IntPair.neighbors (x, y)
+let adjacent_coords (x, y) = Pair.Coord2d.neighbors (x, y)
 
 let fewer_than_four_adjacent grid coord =
   adjacent_coords coord

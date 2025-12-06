@@ -1,0 +1,4 @@
+(library
+ (name advent2025_utils)
+ (libraries core str re pcre2)
+)
