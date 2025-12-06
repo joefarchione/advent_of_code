@@ -20,23 +20,22 @@ let parse_input_p2 filepath =
   in
   List.zip_exn numbers ops |> List.map ~f:(fun (nums, op) -> nums @ [ op ])
 
-let eval parse line =
+let eval line =
+  let to_int =
+    List.map ~f:(fun s ->
+        s |> String.strip ~drop:(Char.equal ' ') |> Int.of_string)
+  in
   let op, init, numbers =
     match List.rev line with
-    | o :: tl when String.contains o '+' -> (( + ), 0, parse tl)
-    | o :: tl when String.contains o '*' -> (( * ), 1, parse tl)
+    | o :: tl when String.contains o '+' -> (( + ), 0, to_int tl)
+    | o :: tl when String.contains o '*' -> (( * ), 1, to_int tl)
     | _ -> failwith "Unknown operation"
   in
   List.fold ~init ~f:op numbers
 
 let solve read filepath =
-  let to_int =
-    List.map ~f:(fun s ->
-        s |> String.strip ~drop:(Char.equal ' ') |> Int.of_string)
-  in
-
   read filepath
-  |> List.fold_left ~init:0 ~f:(fun acc column -> acc + eval to_int column)
+  |> List.fold_left ~init:0 ~f:(fun acc column -> acc + eval column)
 
 let solve1 = solve parse_input_p1
 let solve2 = solve parse_input_p2
