@@ -10,9 +10,10 @@ let read input =
          List.filter_mapi line ~f:(fun col ch ->
              if Char.equal ch '.' then None else Some (row, col)))
   |> List.concat |> List.hd_tl_exn
-  |> fun (start, splitters) -> (start, Coord2Set.of_list splitters, dimensions)
+  |> fun (start, splitters) ->
+  (start, Coord2Set.of_list splitters, Grid.create dimensions)
 
-let split n m splitter =
+let split (n, m) splitter =
   let left =
     Coord2d.left splitter |> fun v -> Option.some_if (Coord2d.in_grid n m v) v
   in
@@ -21,26 +22,30 @@ let split n m splitter =
   in
   (left, right)
 
-let next n m beam =
+let next grid beam =
   let next_beam = Coord2d.down beam in
-  Option.some_if (Coord2d.in_grid n m next_beam) next_beam
+  Option.some_if (Grid.contains grid next_beam) next_beam
 
-let count_number_of_splits n m start splitters =
+let count_number_of_splits grid start splitters =
+  let split = split grid in
+  let next = next grid in
   let rec aux beam count visited =
     match beam with
     | None -> (count, visited)
     | Some b ->
         if Set.mem visited b then (0, visited)
         else if Set.mem splitters b then
-          let left, right = split n m b in
+          let left, right = split b in
           let count_left, visited = aux left 0 visited in
           let count_right, visited = aux right 0 visited in
           (1 + count_left + count_right, Set.add visited b)
-        else aux (next n m b) count (Set.add visited b)
+        else aux (next b) count (Set.add visited b)
   in
   aux (Some start) 0 Coord2Set.empty |> fst
 
-let count_unique_paths n m start splitters =
+let count_unique_paths grid start splitters =
+  let split = split grid in
+  let next = next grid in
   let cache = Hashtbl.Poly.create () in
   let rec aux beam count =
     match Hashtbl.find cache beam with
@@ -51,10 +56,10 @@ let count_unique_paths n m start splitters =
         | Some b ->
             let new_count =
               if Set.mem splitters b then
-                let left, right = split n m b in
+                let left, right = split b in
                 let count_left, count_right = (aux left 1, aux right 1) in
                 count_left + count_right
-              else aux (next n m b) count
+              else aux (next b) count
             in
             Hashtbl.set cache ~key:beam ~data:new_count;
             new_count)
@@ -62,9 +67,9 @@ let count_unique_paths n m start splitters =
   aux (Some start) 1
 
 let solve1 input =
-  let start, splitters, (n, m) = read input in
-  count_number_of_splits n m start splitters
+  let start, splitters, grid = read input in
+  count_number_of_splits grid start splitters
 
 let solve2 input =
-  let start, splitters, (n, m) = read input in
-  count_unique_paths n m start splitters
+  let start, splitters, grid = read input in
+  count_unique_paths grid start splitters

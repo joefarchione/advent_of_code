@@ -2,9 +2,9 @@ open! Core
 open! Advent2025_lib
 
 let solve (day : int) (solve1 : string -> int) (solve2 : string -> int) =
-  let filepath = Advent2025_utils.Io.get_aoc_input_my_cookie 2025 day in
-  let result1 = solve1 filepath in
-  let result2 = solve2 filepath in
+  let input = Advent2025_utils.Io.get_aoc_input_my_cookie 2025 day in
+  let result1 = solve1 input in
+  let result2 = solve2 input in
   printf "Day%02d: (%d, %d)\n" day result1 result2
 
 let%expect_test "calendar" =
