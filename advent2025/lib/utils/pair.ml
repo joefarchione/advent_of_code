@@ -3,7 +3,7 @@ open! Core
 module Coord2d = struct
   include Tuple2
 
-  type t = (int, int) Tuple2.t [@@deriving sexp, compare]
+  type t = (int, int) Tuple2.t [@@deriving sexp, compare, hash]
 
   include Tuple.Comparable (Int) (Int)
 
@@ -27,6 +27,10 @@ module Coord2d = struct
       down_left t;
       down_right t;
     ]
+
+  let in_grid n m (x, y) =
+    let open Int in
+    x >= 0 && x < n && y >= 0 && y < m
 end
 
 module Coord2Set = Set.Make (Coord2d)

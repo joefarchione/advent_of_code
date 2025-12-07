@@ -38,9 +38,9 @@ module RangeList = struct
     aux ranges []
 end
 
-let read filepath =
+let read input =
   let ranges, ingredients =
-    In_channel.read_lines filepath |> List.split_on ~on:(String.equal "")
+    String.split_lines input |> List.split_on ~on:(String.equal "")
   in
   let ranges =
     List.map ranges ~f:(fun line ->

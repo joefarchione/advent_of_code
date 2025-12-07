@@ -7,8 +7,8 @@ let rotate direction degrees position =
   | Left -> (position - degrees) % 100 |> Int.abs
   | Right -> (position + degrees) % 100
 
-let read filepath =
-  In_channel.read_lines filepath
+let read input =
+  input |> String.split_lines
   |> List.map ~f:(fun line ->
          ( (if String.equal (String.prefix line 1) "L" then Left else Right),
            String.drop_prefix line 1 |> Int.of_string ))

@@ -6,9 +6,8 @@ let product_id_range (a, b) =
   Sequence.range_inclusive (Int.of_string a) (Int.of_string b)
   |> Sequence.map ~f:Int.to_string
 
-let read filepath =
-  In_channel.read_lines filepath
-  |> List.hd_exn
+let read input =
+  input
   |> String.split_on_chars ~on:[ ',' ]
   |> List.map ~f:(fun range_str ->
          match String.split_on_chars ~on:[ '-' ] range_str with

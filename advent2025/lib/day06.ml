@@ -2,11 +2,11 @@ open Aoc
 
 let split_line = Str.split (Str.regexp "[ \t]+")
 
-let parse_input_p1 filepath =
-  In_channel.read_lines filepath |> List.map ~f:split_line |> List.zip_n
+let parse_input_p1 input =
+  String.split_lines input |> List.map ~f:split_line |> List.zip_n
 
-let parse_input_p2 filepath =
-  In_channel.read_lines filepath |> List.rev |> List.hd_tl_exn |> fun (a, b) ->
+let parse_input_p2 input =
+  String.split_lines input |> List.rev |> List.hd_tl_exn |> fun (a, b) ->
   (a, List.rev b) |> fun (ops, numbers) ->
   ( split_line ops,
     numbers |> List.map ~f:String.to_list |> List.transpose_exn

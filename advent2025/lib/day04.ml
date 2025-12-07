@@ -1,13 +1,13 @@
 open Aoc
 
-let read filepath =
-  In_channel.read_lines filepath
-  |> List.mapi ~f:(fun i line ->
+let read =
+  String.split_lines
+  >> List.mapi ~f:(fun i line ->
          line |> String.to_list
          |> List.mapi ~f:(fun j v -> ((i, j), v))
          |> List.filter ~f:(fun (_, v) -> Char.equal v '@')
          |> List.map ~f:fst)
-  |> List.concat |> Pair.Coord2Set.of_list
+  >> List.concat >> Pair.Coord2Set.of_list
 
 let adjacent_coords (x, y) = Pair.Coord2d.neighbors (x, y)
 

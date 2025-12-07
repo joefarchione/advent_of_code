@@ -1,8 +1,8 @@
 open Aoc
 
-let read filepath =
-  In_channel.read_lines filepath
-  |> List.map ~f:(fun l -> String.to_list l |> List.map ~f:Char.get_digit_exn)
+let read =
+  String.split_lines
+  >> List.map ~f:(fun l -> String.to_list l |> List.map ~f:Char.get_digit_exn)
 
 let find_largest_joltage bank =
   let rec aux bank tens ones =

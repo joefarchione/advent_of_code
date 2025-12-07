@@ -1,4 +1,3 @@
 (library
  (name advent2025_utils)
- (libraries core str re pcre2)
-)
+ (libraries core str re pcre2 curl core_unix.sys_unix core_unix))
