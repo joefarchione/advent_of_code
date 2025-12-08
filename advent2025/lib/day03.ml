@@ -28,8 +28,7 @@ let find_largest_joltage_n n bank =
     | _ when n = List.length bank -> List.rev bank @ acc
     | _ when n > 0 ->
         let next_digit, next_index =
-          List.length bank - n + 1
-          |> List.take bank
+          List.take (List.length bank - n + 1) bank
           |> List.max_elt_i ~compare:Int.compare
           |> Option.value_exn
         in

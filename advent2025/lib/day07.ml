@@ -11,19 +11,19 @@ let read input =
              if Char.equal ch '.' then None else Some (row, col)))
   |> List.concat |> List.hd_tl_exn
   |> fun (start, splitters) ->
-  (start, Coord2Set.of_list splitters, Grid.create dimensions)
+  (start, Coord2.Set.of_list splitters, Grid.create dimensions)
 
 let split (n, m) splitter =
   let left =
-    Coord2d.left splitter |> fun v -> Option.some_if (Coord2d.in_grid n m v) v
+    Coord2.left splitter |> fun v -> Option.some_if (Coord2.in_grid n m v) v
   in
   let right =
-    Coord2d.right splitter |> fun v -> Option.some_if (Coord2d.in_grid n m v) v
+    Coord2.right splitter |> fun v -> Option.some_if (Coord2.in_grid n m v) v
   in
   (left, right)
 
 let next grid beam =
-  let next_beam = Coord2d.down beam in
+  let next_beam = Coord2.down beam in
   Option.some_if (Grid.contains grid next_beam) next_beam
 
 let count_number_of_splits grid start splitters =
@@ -41,7 +41,7 @@ let count_number_of_splits grid start splitters =
           (1 + count_left + count_right, Set.add visited b)
         else aux (next b) count (Set.add visited b)
   in
-  aux (Some start) 0 Coord2Set.empty |> fst
+  aux (Some start) 0 Coord2.Set.empty |> fst
 
 let count_unique_paths grid start splitters =
   let split = split grid in

@@ -90,3 +90,6 @@ let rec pairs list =
       let tail_combinations = pairs tail in
       (* 3. Combine the two sets of results *)
       head_pairs @ tail_combinations
+
+let sort_desc compare lst = List.sort lst ~compare:(fun a b -> compare b a)
+let take n l = List.take l n
