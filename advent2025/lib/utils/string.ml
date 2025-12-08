@@ -10,3 +10,5 @@ let chunk_string (s : t) (n : int) =
       aux (i + n) (chunk :: acc)
   in
   aux 0 []
+
+let split_on_char on = split_on_chars ~on:[ on ]

@@ -3,7 +3,7 @@ open! Core
 module Coord2d = struct
   include Tuple2
 
-  type t = (int, int) Tuple2.t [@@deriving sexp, compare, hash]
+  type t = int * int [@@deriving sexp, compare, hash]
 
   include Tuple.Comparable (Int) (Int)
 
@@ -34,3 +34,10 @@ module Coord2d = struct
 end
 
 module Coord2Set = Set.Make (Coord2d)
+
+module Coord3d = struct
+  type t = int * int * int [@@deriving compare, sexp, hash]
+end
+
+module Coord3dMap = Map.Make (Coord3d)
+module Coord3dSet = Set.Make (Coord3d)

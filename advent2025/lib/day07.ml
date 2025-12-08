@@ -57,8 +57,7 @@ let count_unique_paths grid start splitters =
             let new_count =
               if Set.mem splitters b then
                 let left, right = split b in
-                let count_left, count_right = (aux left 1, aux right 1) in
-                count_left + count_right
+                aux left 1 + aux right 1
               else aux (next b) count
             in
             Hashtbl.set cache ~key:beam ~data:new_count;

@@ -2,6 +2,7 @@ open! Core
 open! Core_unix
 
 let read_line filepath = In_channel.read_lines filepath |> List.hd_exn
+let lines input = String.split_lines input
 
 let write string filepath =
   let oc = Out_channel.create filepath in

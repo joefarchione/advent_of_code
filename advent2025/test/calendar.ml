@@ -2,7 +2,7 @@ open! Core
 open! Advent2025_lib
 
 let solve (day : int) (solve1 : string -> int) (solve2 : string -> int) =
-  let input = Advent2025_utils.Io.get_aoc_input_my_cookie 2025 day in
+  let input = Advent2025_utils.Input.get_aoc_input_my_cookie 2025 day in
   let result1 = solve1 input in
   let result2 = solve2 input in
   printf "Day%02d: (%d, %d)\n" day result1 result2
@@ -15,6 +15,7 @@ let%expect_test "calendar" =
   solve 5 Day05.solve1 Day05.solve2;
   solve 6 Day06.solve1 Day06.solve2;
   solve 7 Day07.solve1 Day07.solve2;
+  solve 8 Day08.solve1 Day08.solve2;
   [%expect
     {|
     Day01: (1026, 5923)
@@ -24,4 +25,5 @@ let%expect_test "calendar" =
     Day05: (698, 352807801032167)
     Day06: (4648618073226, 7329921182115)
     Day07: (1555, 12895232295789)
+    Day08: (129564, 42047840)
     |}]

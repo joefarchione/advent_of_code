@@ -67,3 +67,26 @@ let max_elt_i lst ~compare =
 
 let rec remove_last l =
   match l with [] -> [] | [ _ ] -> [] | hd :: tl -> hd :: remove_last tl
+
+let rec choose k list =
+  match (k, list) with
+  | 0, _ -> [ [] ]
+  | _, [] -> []
+  | k, head :: tail ->
+      let with_head =
+        let smaller_subsets = choose (k - 1) tail in
+        List.map ~f:(fun subset -> head :: subset) smaller_subsets
+      in
+      let without_head = choose k tail in
+      with_head @ without_head
+
+let rec pairs list =
+  match list with
+  | [] -> []
+  | head :: tail ->
+      (* 1. Pair the head with every element in the tail *)
+      let head_pairs = List.map ~f:(fun x -> (head, x)) tail in
+      (* 2. Recursively find all combinations of size 2 from the tail *)
+      let tail_combinations = pairs tail in
+      (* 3. Combine the two sets of results *)
+      head_pairs @ tail_combinations
