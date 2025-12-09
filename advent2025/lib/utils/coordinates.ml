@@ -32,6 +32,23 @@ module Coord2 = struct
     let in_grid n m (x, y) =
       let open Int in
       x >= 0 && x < n && y >= 0 && y < m
+
+    let of_string ?(on = ',') s =
+      match String.split (s |> String.strip) ~on with
+      | [ a; b ] -> (Int.of_string a, Int.of_string b)
+      | _ -> failwith "Invalid box string"
+
+    let sort (a, b) (x, y) =
+      match Int.compare a x with
+      | 0 -> (
+          match Int.compare b y with
+          | 0 -> ((a, b), (x, y))
+          | -1 -> ((a, b), (x, y))
+          | _ -> ((x, y), (a, b)))
+      | -1 -> ((a, b), (x, y))
+      | _ -> ((x, y), (a, b))
+
+    let switch (a, b) = (b, a)
   end
 
   include T

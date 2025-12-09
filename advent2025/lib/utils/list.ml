@@ -1,8 +1,6 @@
 open! Core
 include List
 
-let range = fun n -> List.init n ~f:Fn.id
-
 let split_on ~on lst =
   List.split_while lst ~f:(fun x -> not (on x)) |> fun (before, after) ->
   (before, List.drop after 1)
@@ -41,6 +39,11 @@ let zip_n_longest ~default lsts =
       heads :: aux tails
   in
   aux lsts
+
+let range2 (n, m) =
+  List.range 0 n
+  |> List.map ~f:(fun i -> List.range 0 m |> List.map ~f:(fun j -> (i, j)))
+  |> List.concat
 
 let hd_tl_exn lst =
   match lst with
@@ -93,3 +96,16 @@ let rec pairs list =
 
 let sort_desc compare lst = List.sort lst ~compare:(fun a b -> compare b a)
 let take n l = List.take l n
+
+let rec pairwise lst =
+  match lst with
+  | [] -> []
+  | x :: y :: rest -> (x, y) :: pairwise rest
+  | _ :: [] -> []
+
+let rec pair_consecutive_elements lst =
+  match lst with
+  | [] -> []
+  | x :: y :: rest -> (x, y) :: pair_consecutive_elements rest
+  | _ :: [] ->
+      [] (* Drops the last element if the list has an odd number of items *)
