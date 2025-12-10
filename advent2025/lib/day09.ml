@@ -29,10 +29,9 @@ let solve2 input =
   in
 
   List.pairs red_tiles
-  |> List.fold_left ~init:0 ~f:(fun acc ((x1, y1), (x2, y2)) ->
-         let min_x, min_y, max_x, max_y =
-           (Int.min x1 x2, Int.min y1 y2, Int.max x1 x2, Int.max y1 y2)
-         in
+  |> List.fold ~init:0 ~f:(fun acc ((x1, y1), (x2, y2)) ->
+         let min_x, max_x = Tuple2.min_max (x1, x2) in
+         let min_y, max_y = Tuple2.min_max (y1, y2) in
          let has_edge_crossing =
            List.exists edges_v ~f:(fun (ex, ey1, ey2) ->
                ex > min_x && ex < max_x && not (ey1 >= max_y || ey2 <= min_y))

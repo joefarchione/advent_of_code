@@ -17,6 +17,7 @@ let%expect_test "calendar" =
   solve 7 Day07.solve1 Day07.solve2;
   solve 8 Day08.solve1 Day08.solve2;
   solve 9 Day09.solve1 Day09.solve2;
+  solve 10 Day10.solve1 Day10.solve2;
   [%expect
     {|
     Day01: (1026, 5923)
@@ -28,4 +29,5 @@ let%expect_test "calendar" =
     Day07: (1555, 12895232295789)
     Day08: (129564, 42047840)
     Day09: (4725826296, 1637556834)
+    Day10: (507, 18981)
     |}]

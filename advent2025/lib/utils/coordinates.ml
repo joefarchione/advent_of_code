@@ -67,3 +67,9 @@ module Coord3 = struct
     | [ a; b; c ] -> (Int.of_string a, Int.of_string b, Int.of_string c)
     | _ -> failwith "Invalid box string"
 end
+
+module Tuple2 = struct
+  include Core.Tuple2
+
+  let min_max (a, b) = (Int.min a b, Int.max a b)
+end

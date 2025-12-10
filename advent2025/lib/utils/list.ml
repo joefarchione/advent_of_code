@@ -109,3 +109,25 @@ let rec pair_consecutive_elements lst =
   | x :: y :: rest -> (x, y) :: pair_consecutive_elements rest
   | _ :: [] ->
       [] (* Drops the last element if the list has an odd number of items *)
+
+let fold1 f lst =
+  match lst with
+  | [] -> failwith "foldl1 on an empty list"
+  | h :: t -> List.fold_left ~f ~init:h t
+
+let rec n_cartesian_product = function
+  | [] ->
+      [ [] ]
+      (* Base case: product of an empty list of lists is a list containing a single empty list *)
+  | x :: xs ->
+      (* Head x is the current list to combine, tail xs is the rest *)
+      let rest_products = n_cartesian_product xs in
+      (* Recursively get products of the remaining lists *)
+      List.concat (* Flatten the result of the mapping *)
+        (List.map (* For each element i in the current list x *)
+           ~f:(fun i ->
+             List.map (* For each product list rs from the rest *)
+               ~f:(fun rs -> i :: rs)
+                 (* Prepend i to the front of the product list *)
+               rest_products)
+           x)

@@ -1,6 +1,6 @@
 (library
  (name advent2025_lib)
- (libraries core str re ppx_expect advent2025_utils pcre2)
+ (libraries core str re ppx_expect advent2025_utils pcre2 lp lp-glpk)
  (inline_tests)
  (preprocess
   (pps ppx_jane ppx_inline_test ppx_expect)))
