@@ -51,10 +51,11 @@ let parse (line : string) =
         |> List.map ~f:Light.of_char
       in
       let buttons =
-        List.map (List.drop_last_exn tl)
-          ~f:
-            (String.drop_first_and_last
-            >> Button.of_string (List.length indicator))
+        List.drop_last_exn tl
+        |> List.map
+             ~f:
+               (String.drop_first_and_last
+               >> Button.of_string (List.length indicator))
       in
       let joltages =
         List.last_exn tl |> String.drop_first_and_last |> String.split ~on:','
@@ -94,16 +95,15 @@ let find_joltage_very_slowly target (buttons : Joltages.t list) =
 
 let fewest_presses_to_match_joltages (target : Joltages.t)
     (buttons : Button.t list) =
-  let target = List.map target ~f:Float.of_int in
+  let target = target |> List.map ~f:Float.of_int in
   let buttons = List.map buttons ~f:(List.map ~f:Float.of_int) in
-  let button_vars =
+  let button_coeffs =
     List.mapi buttons ~f:(fun j _ ->
         Lp.var ~integer:true ~lb:0.0 (sprintf "x_%d" j))
   in
 
-  let objective =
-    List.fold_left button_vars ~init:Lp.zero ~f:(fun acc v -> Lp.(acc ++ v))
-    |> Lp.minimize
+  let object_minimize_coefficient_sum =
+    List.fold1 Lp.( ++ ) button_coeffs |> Lp.minimize
   in
 
   let constraints =
@@ -111,14 +111,14 @@ let fewest_presses_to_match_joltages (target : Joltages.t)
         let b_eq_val = light_value in
 
         let lhs_expr =
-          List.fold2_exn buttons button_vars ~init:Lp.zero
+          List.fold2_exn buttons button_coeffs ~init:Lp.zero
             ~f:(fun acc jolts coeff ->
               Lp.(acc ++ (coeff *~ Lp.c (List.nth_exn jolts light_index))))
         in
         Lp.eq lhs_expr (Lp.c b_eq_val))
   in
 
-  let problem = Lp.make objective constraints in
+  let problem = Lp.make object_minimize_coefficient_sum constraints in
 
   match Lp_glpk.solve problem ~term_output:false with
   | Ok (_, xs) ->
