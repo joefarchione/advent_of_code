@@ -112,8 +112,8 @@ let find_light target (buttons : Button.t list) =
          | None -> Continue acc)
        ~finish:(fun acc -> acc)
 
-let find_joltage (want_float : Joltages.t) (buttons : Button.t list) =
-  let want_float = List.map want_float ~f:Float.of_int in
+let find_joltage (target : Joltages.t) (buttons : Button.t list) =
+  let want_float = List.map target ~f:Float.of_int in
   let buttons = List.map buttons ~f:(List.map ~f:Float.of_int) in
   let button_vars =
     List.mapi buttons ~f:(fun j _ ->
