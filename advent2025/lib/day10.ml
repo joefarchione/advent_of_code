@@ -113,7 +113,7 @@ let find_light target (buttons : Button.t list) =
        ~finish:(fun acc -> acc)
 
 let find_joltage (target : Joltages.t) (buttons : Button.t list) =
-  let want_float = List.map target ~f:Float.of_int in
+  let target = List.map target ~f:Float.of_int in
   let buttons = List.map buttons ~f:(List.map ~f:Float.of_int) in
   let button_vars =
     List.mapi buttons ~f:(fun j _ ->
@@ -126,7 +126,7 @@ let find_joltage (target : Joltages.t) (buttons : Button.t list) =
   let objective = Lp.minimize objective_expr in
 
   let constraints =
-    List.mapi want_float ~f:(fun light_index light_value ->
+    List.mapi target ~f:(fun light_index light_value ->
         let b_eq_val = light_value in
 
         let lhs_expr =
