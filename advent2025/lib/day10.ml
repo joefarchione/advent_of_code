@@ -106,7 +106,7 @@ let fewest_presses_to_match_joltages (target : Joltages.t)
     List.fold1 Lp.( ++ ) button_coeffs |> Lp.minimize
   in
 
-  let constaints_sum_matches_joltage =
+  let constraints_sum_matches_joltage =
     List.mapi target ~f:(fun light_index light_value ->
         let b_eq_val = light_value in
 
@@ -119,7 +119,7 @@ let fewest_presses_to_match_joltages (target : Joltages.t)
   in
 
   let problem =
-    Lp.make object_minimize_coefficient_sum constaints_sum_matches_joltage
+    Lp.make object_minimize_coefficient_sum constraints_sum_matches_joltage
   in
 
   match Lp_glpk.solve problem ~term_output:false with
