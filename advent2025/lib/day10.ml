@@ -95,12 +95,14 @@ let find_joltage_very_slowly target (buttons : Joltages.t list) =
 
 let fewest_presses_to_match_joltages (target : Joltages.t)
     (buttons : Button.t list) =
+  let button_coeffs =
+    List.mapi buttons ~f:(fun j b ->
+        let ub = Joltages.max_trys target b |> Float.of_int in
+        Lp.var ~integer:true ~lb:0.0 ~ub (sprintf "x_%d" j))
+  in
+
   let target = target |> List.map ~f:Float.of_int in
   let buttons = List.map buttons ~f:(List.map ~f:Float.of_int) in
-  let button_coeffs =
-    List.mapi buttons ~f:(fun j _ ->
-        Lp.var ~integer:true ~lb:0.0 (sprintf "x_%d" j))
-  in
 
   let object_minimize_coefficient_sum =
     List.fold1 Lp.( ++ ) button_coeffs |> Lp.minimize
