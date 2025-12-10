@@ -113,7 +113,6 @@ let find_light target (buttons : Button.t list) =
        ~finish:(fun acc -> acc)
 
 let find_joltage (want_float : Joltages.t) (buttons : Button.t list) =
-  (* 3a. Define the Decision Variables (x_j) *)
   let want_float = List.map want_float ~f:Float.of_int in
   let buttons = List.map buttons ~f:(List.map ~f:Float.of_int) in
   let button_vars =
@@ -135,8 +134,6 @@ let find_joltage (want_float : Joltages.t) (buttons : Button.t list) =
             ~f:(fun acc jolts coeff ->
               Lp.(acc ++ (coeff *~ Lp.c (List.nth_exn jolts light_index))))
         in
-
-        (* Constraint: lhs_expr = b_eq_val *)
         Lp.eq lhs_expr (Lp.c b_eq_val))
   in
 
@@ -144,8 +141,6 @@ let find_joltage (want_float : Joltages.t) (buttons : Button.t list) =
 
   match Lp_glpk.solve problem ~term_output:false with
   | Ok (_, xs) ->
-      (*       Printf.printf "Objective: %.2f\n" obj; *)
-      (* Iterate over variables (xs is a PMap.t) and print their values *)
       Lp.PMap.to_list xs |> List.map ~f:snd
       |> List.sum (module Int) ~f:Float.to_int
   | Error msg ->
