@@ -13,42 +13,22 @@ module Light = struct
 end
 
 module Button = struct
-  module T = struct
-    type t = Light.t list [@@deriving sexp, equal, compare, hash]
-  end
-
-  include T
-  include Comparator.Make (T)
+  type t = Light.t list [@@deriving sexp, equal, compare, hash]
 
   let of_string (n : int) (str : string) : t =
     let indicators = String.split ~on:',' str |> List.map ~f:Int.of_string in
     List.init n ~f:(fun i ->
         if List.mem indicators i ~equal:Int.equal then 1 else 0)
 
-  module Set = Set.Make (T)
-
   let ( + ) (a : t) (b : t) : t = List.map2_exn a b ~f:Light.( + )
   let create n = List.init n ~f:(fun _ -> 0)
-  let zero = []
 end
 
 module Joltages = struct
-  module T = struct
-    type t = int list [@@deriving sexp, equal, compare, hash]
-  end
-
-  include T
-  include Comparator.Make (T)
+  type t = int list [@@deriving sexp, equal, compare, hash]
 
   let ( + ) (a : t) (b : t) : t = List.map2_exn a b ~f:( + )
-  let ( - ) (a : t) (b : t) : t = List.map2_exn a b ~f:(fun a b -> a - b)
-
-  let invalid target a =
-    List.zip_exn target a |> List.exists ~f:(fun (x, y) -> y > x)
-
-  let create n = List.init n ~f:(fun _ -> 0)
   let equal a b = List.for_all2_exn a b ~f:Int.equal
-  let is_zero a = List.for_all a ~f:(Int.equal 0)
 
   let max_trys a b =
     List.zip_exn a b
@@ -85,20 +65,7 @@ let parse (line : string) =
 
 let read input = input |> String.split_lines |> List.map ~f:parse
 
-let find_joltage_very_slowly target (buttons : Joltages.t list) =
-  let max_weights = List.map buttons ~f:(fun b -> Joltages.max_trys target b) in
-  max_weights
-  |> List.map ~f:(fun mw -> List.init (mw + 1) ~f:Fn.id |> Sequence.of_list)
-  |> Sequence.n_cartesian_product
-  |> Sequence.filter ~f:(fun w ->
-         List.map2_exn w buttons ~f:(fun weight button ->
-             List.map button ~f:(fun x -> weight * x))
-         |> List.fold1 Joltages.( + ) |> Joltages.equal target)
-  |> Sequence.map ~f:(List.sum (module Int) ~f:Fn.id)
-  |> Sequence.min_elt ~compare:Int.compare
-  |> Option.value_exn
-
-let find_light target (buttons : Button.t list) =
+let fewest_presses_to_match_indicator target (buttons : Button.t list) =
   let n = List.length buttons in
   List.init n ~f:(( + ) 1)
   |> List.fold_until ~init:Int.max_value
@@ -112,7 +79,21 @@ let find_light target (buttons : Button.t list) =
          | None -> Continue acc)
        ~finish:(fun acc -> acc)
 
-let find_joltage (target : Joltages.t) (buttons : Button.t list) =
+let find_joltage_very_slowly target (buttons : Joltages.t list) =
+  let max_weights = List.map buttons ~f:(fun b -> Joltages.max_trys target b) in
+  max_weights
+  |> List.map ~f:(fun mw -> List.init (mw + 1) ~f:Fn.id |> Sequence.of_list)
+  |> Sequence.n_cartesian_product
+  |> Sequence.filter ~f:(fun w ->
+         List.map2_exn w buttons ~f:(fun weight button ->
+             List.map button ~f:(fun x -> weight * x))
+         |> List.fold1 Joltages.( + ) |> Joltages.equal target)
+  |> Sequence.map ~f:(List.sum (module Int) ~f:Fn.id)
+  |> Sequence.min_elt ~compare:Int.compare
+  |> Option.value_exn
+
+let fewest_presses_to_match_joltages (target : Joltages.t)
+    (buttons : Button.t list) =
   let target = List.map target ~f:Float.of_int in
   let buttons = List.map buttons ~f:(List.map ~f:Float.of_int) in
   let button_vars =
@@ -120,10 +101,10 @@ let find_joltage (target : Joltages.t) (buttons : Button.t list) =
         Lp.var ~integer:true ~lb:0.0 (sprintf "x_%d" j))
   in
 
-  let objective_expr =
+  let objective =
     List.fold_left button_vars ~init:Lp.zero ~f:(fun acc v -> Lp.(acc ++ v))
+    |> Lp.minimize
   in
-  let objective = Lp.minimize objective_expr in
 
   let constraints =
     List.mapi target ~f:(fun light_index light_value ->
@@ -149,10 +130,12 @@ let find_joltage (target : Joltages.t) (buttons : Button.t list) =
 
 let solve1 input =
   read input
-  |> List.map ~f:(fun (target, buttons, _) -> find_light target buttons)
+  |> List.map ~f:(fun (target, buttons, _) ->
+         fewest_presses_to_match_indicator target buttons)
   |> List.sum (module Int) ~f:Fn.id
 
 let solve2 input =
   read input
-  |> List.map ~f:(fun (_, buttons, joltages) -> find_joltage joltages buttons)
+  |> List.map ~f:(fun (_, buttons, joltages) ->
+         fewest_presses_to_match_joltages joltages buttons)
   |> List.sum (module Int) ~f:Fn.id
