@@ -85,7 +85,7 @@ let parse (line : string) =
 
 let read input = input |> String.split_lines |> List.map ~f:parse
 
-let find_joltage target (buttons : Joltages.t list) =
+let find_joltage_very_slowly target (buttons : Joltages.t list) =
   let max_weights = List.map buttons ~f:(fun b -> Joltages.max_trys target b) in
   max_weights
   |> List.map ~f:(fun mw -> List.init (mw + 1) ~f:Fn.id |> Sequence.of_list)
@@ -112,7 +112,7 @@ let find_light target (buttons : Button.t list) =
          | None -> Continue acc)
        ~finish:(fun acc -> acc)
 
-let solve_lights_problem (want_float : Joltages.t) (buttons : Button.t list) =
+let find_joltage (want_float : Joltages.t) (buttons : Button.t list) =
   (* 3a. Define the Decision Variables (x_j) *)
   let want_float = List.map want_float ~f:Float.of_int in
   let buttons = List.map buttons ~f:(List.map ~f:Float.of_int) in
@@ -159,6 +159,5 @@ let solve1 input =
 
 let solve2 input =
   read input
-  |> List.map ~f:(fun (_, buttons, joltages) ->
-         solve_lights_problem joltages buttons)
+  |> List.map ~f:(fun (_, buttons, joltages) -> find_joltage joltages buttons)
   |> List.sum (module Int) ~f:Fn.id
