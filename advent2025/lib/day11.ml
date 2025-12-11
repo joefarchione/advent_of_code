@@ -22,7 +22,8 @@ let paths_a_to_b ?(req_nodes = Set.empty (module String)) a b cnxns =
     Memo.memo_rec
       (module Key)
       (fun aux (a, b, req_count) ->
-        if String.equal a b then if req_count >= 2 then 1 else 0
+        if String.equal a b then
+          if req_count >= Set.length req_nodes then 1 else 0
         else
           let required = inc_req_count req_count a in
           Map.find_exn cnxns a
