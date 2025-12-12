@@ -17,6 +17,12 @@ module T = struct
     if len < 3 then ""
       (* Return an empty string if the input is too short to drop two chars *)
     else Core.String.sub s ~pos:1 ~len:(len - 2)
+
+  let split_on_empty_line s =
+    (* Matches one or more occurrences of newline characters (\n or \r\n), 
+     effectively splitting on blank lines. *)
+    let re = Str.regexp "\n\n\\|\r\n\r\n" in
+    Str.split re s
 end
 
 include Core.String

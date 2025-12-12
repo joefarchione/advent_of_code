@@ -3,15 +3,11 @@ open Aoc
 let read input =
   input |> String.split_lines
   |> List.map ~f:(fun l ->
-         let open Re in
-         let pat = alpha |> rep1 |> compile in
-         let strings = Re.all pat l |> List.map ~f:(fun g -> Group.get g 0) in
-         (List.hd_exn strings, List.tl_exn strings))
+      let open Re in
+      let pat = alpha |> rep1 |> compile in
+      let strings = Re.all pat l |> List.map ~f:(fun g -> Group.get g 0) in
+      (List.hd_exn strings, List.tl_exn strings))
   |> Map.of_alist_exn (module String)
-
-module Key = struct
-  type t = string * string * int [@@deriving sexp, hash, compare]
-end
 
 let paths_a_to_b ?(req_nodes = Set.empty (module String)) a b cnxns =
   let inc_req_count count node =
@@ -20,7 +16,9 @@ let paths_a_to_b ?(req_nodes = Set.empty (module String)) a b cnxns =
   in
   let aux =
     Memo.memo_rec
-      (module Key)
+      (module struct
+        type t = string * string * int [@@deriving sexp, hash, compare]
+      end)
       (fun aux (a, b, req_count) ->
         if String.equal a b then
           if req_count >= Set.length req_nodes then 1 else 0
