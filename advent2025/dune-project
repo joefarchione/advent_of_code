@@ -5,22 +5,21 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github joefarchione/advent_of_code))
 
-(authors "Author Name <author@example.com>")
-
-(maintainers "Maintainer Name <maintainer@example.com>")
-
-(license LICENSE)
-
-(documentation https://url/to/documentation)
+(authors "Joe Farchione <jfarchione@gmail.com>")
 
 (package
  (name advent2025)
- (synopsis "A short synopsis")
- (description "A longer description")
- (depends ocaml)
- (tags
-  ("add topics" "to describe" your project)))
-
-; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html
+ (synopsis "Advent of Code solutions in OCaml")
+ (depends
+  ocaml
+  str
+  re
+  ppx_expect
+  pcre2
+  lp
+  lp-glpk
+  ppx_jane
+  ppx_inline_test
+  ppx_expect))

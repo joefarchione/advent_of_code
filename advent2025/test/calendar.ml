@@ -2,7 +2,7 @@ open! Core
 open! Advent2025_lib
 
 let solve (day : int) (solve1 : string -> int) (solve2 : string -> int) =
-  let input = Advent2025_utils.Input.get_aoc_input_my_cookie 2025 day in
+  let input = Advent2025_utils.Input.get 2025 day in
   let result1 = solve1 input in
   let result2 = solve2 input in
   printf "Day%02d: (%d, %d)\n" day result1 result2

@@ -34,7 +34,7 @@ let file_exists filepath =
 let create_newdir path perm =
   if not (file_exists path) then Core_unix.mkdir path ~perm
 
-let get_aoc_input_my_cookie year day =
+let get year day =
   let filepath =
     Printf.sprintf "%s/aoc/%d/day%d.txt" (Sys.getenv_exn "HOME") year day
   in
